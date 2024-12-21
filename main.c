@@ -59,11 +59,102 @@ char *str_replace(char *orig, char *rep, char *with) {
     return result;
 }
 
-int main() {
-    char *filename = "example.txt";
+int main(int argc, char *argv[]) {
+    //"example.txt" -d "Nikita"
+    //"example.txt" -r "ert" "Nikita"
+    //"example.txt" -i -f ">"
+    //"example.txt" -i -b "<"
+    
+    printf("start\n");
+    char *action = "";
+	char *added_text = "";
+	char *text_to_delete = "";
+	char *text_to_replace = "";
+	char *text_with_replace = "";
+    
+    if (argc < 4) {
+		printf("error: wrong amount of arguments");
+		return 1;
+	}
+	
+	char *filename = argv[1];
+	const char *command = argv[2];
+	printf("command: %s\n", command);
+	if (strcmp(command,"-r")==0) {
+	    action = "replace";
+	    text_to_replace = argv[3];
+	    text_with_replace = argv[4];
+	}
+	
+	if (strcmp(command,"-d")==0) {
+	    action = "delete";
+	    text_to_delete = argv[3];
+	}
+	
+	if (strcmp(command,"-i")==0 && strcmp(argv[3],"-f")==0) {
+	    action = "add_before";
+	    added_text = argv[4];
+	}
+	
+	if (strcmp(command,"-i")==0 && strcmp(argv[3],"-b")==0) {
+	    action = "add_after";
+	    added_text = argv[4];
+	}
+	
+	//print arguments
+	printf("action: %s\n", action);
+	printf("added_text: %s\n", added_text);
+	printf("text_to_delete: %s\n", text_to_delete);
+	printf("text_to_replace: %s\n", text_to_replace);
+	printf("text_with_replace: %s\n", text_with_replace);
 
-    //reading file into buffer
+	
+	
+	//reading file into buffer
 	char *buffer = 0;
 	file_to_buffer(&buffer, filename);
 	printf("%s", buffer);
+	
+
+
+	FILE * fw = fopen(filename, "w");
+
+	if (buffer)
+	{
+		fseek(fw, 0, SEEK_SET);
+		char *line = strtok(strdup(buffer), "\n");
+		while(line) {
+			printf("%s\n", line);
+
+
+			if (strcmp(action, "add_before")==0) {
+				fprintf(fw, "%s%s", added_text, line);
+			} else if (strcmp(action, "add_after")==0) {
+				fprintf(fw, "%s%s", line, added_text);
+			} else if (strcmp(action, "delete")==0) {
+			    char *newline;
+                newline = str_remove(line, text_to_delete);
+				fprintf(fw, "%s", newline);
+			} else if (strcmp(action, "replace")==0) {
+			    char *newline;
+			    newline = str_replace(line, text_to_replace, text_with_replace);
+				fprintf(fw, "%s", newline);
+			}
+			else {
+				printf("error: incorrect flag\n");
+			}
+
+
+
+			line  = strtok(NULL, "\n");
+			if (line != NULL) {
+				fprintf(fw, "\n");
+			}
+
+		}
+
+	}
+
+	fclose(fw);
+	return 0;
 }
